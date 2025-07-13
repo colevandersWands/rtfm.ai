@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>rtfm.ai.yml — Shared Memory for Local LLMs</title>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: #dcdcdc;
+      font-family: monospace;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1, h2, h3 {
+      color: #00ff99;
+    }
+    code, pre {
+      background-color: #2a2a2a;
+      padding: 0.5em;
+      display: block;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      border-left: 4px solid #00ff99;
+    }
+    a {
+      color: #66ccff;
+    }
+    input, textarea, select, button {
+      font-family: monospace;
+      background-color: #2a2a2a;
+      color: #dcdcdc;
+      border: 1px solid #444;
+      padding: 0.5em;
+      margin-bottom: 1em;
+      width: 100%;
+    }
+    label {
+      display: block;
+      margin-top: 1em;
+      margin-bottom: 0.3em;
+    }
+    button {
+      background-color: #00ff99;
+      color: #000;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #00cc77;
+    }
+    hr {
+      border: 0;
+      border-top: 1px solid #444;
+      margin: 2rem 0;
+    }
+  </style>
+</head>
+<body>
+
+<h1>rtfm.ai.yml</h1>
+<p><em>A shared memory file for LLMs collaborating across machines and developers.</em></p>
+
+<hr>
+
+<h2>📂 Generate Your Own <code>rtfm.ai.yml</code></h2>
+
+<form id="agentForm">
+  <label for="projectName">Project Name:</label>
+  <input type="text" id="projectName" required />
+
+  <label for="domainName">Domain Name:</label>
+  <input type="text" id="domainName" required />
+
+  <label for="domainSummary">Domain Summary:</label>
+  <textarea id="domainSummary" rows="3" required></textarea>
+
+  <label for="projectGoals">Project Goals (one per line):</label>
+  <textarea id="projectGoals" rows="4" required></textarea>
+
+  <label for="nonGoals">Non-Goals (optional, one per line):</label>
+  <textarea id="nonGoals" rows="3"></textarea>
+
+  <button type="submit">Download rtfm.ai.yml</button>
+</form>
+
+<pre id="yamlPreview" style="display:none; margin-top:2em;"></pre>
+
+<hr>
+
+<h2>💾 Why This Project?</h2>
+<p>
+<code>rtfm.ai.yml</code> gives local agents memory — so they can remember objectives, plans,
+and architectural decisions across time, teams, and machines.
+</p>
+
+<hr>
+
+<h2>🧠 Prompt Your Agent</h2>
+<pre>
+"Before answering, read rtfm.ai.yml from this repo and align with its goals, context, and memory."
+</pre>
+
+<hr>
+
+<h2>📑 Fields Included in <code>rtfm.ai.yml</code></h2>
+
+<pre>
+project:
+  name, domain (name + summary)
+goals:
+  - what the project is trying to achieve
+non_goals:
+  - what it avoids or defers
+context:
+  features, todos, rationale
+domain_knowledge:
+  glossary, background
+agents:
+  agent metadata, logs
+memory:
+  summary_chunks (compressed memory)
+runtime:
+  sync rules, update strategy
+definitions:
+  local project vocab
+</pre>
+
+<hr>
+
+<p style="color:#888;">Built with plain HTML and optimism. Rev 0.1</p>
+
+<script>
+document.getElementById('agentForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const name = document.getElementById('projectName').value.trim();
+  const domain = document.getElementById('domainName').value.trim();
+  const domainSummary = document.getElementById('domainSummary').value.trim();
+  const goals = document.getElementById('projectGoals').value.trim().split('\n').map(g => `  - ${g.trim()}`).join('\n');
+  const nonGoalsRaw = document.getElementById('nonGoals').value.trim();
+  const nonGoals = nonGoalsRaw ? nonGoalsRaw.split('\n').map(g => `  - ${g.trim()}`).join('\n') : null;
+
+  let yaml = `version: 0.1
+project:
+  name: ${name}
+  domain:
+    name: ${domain}
+    summary: >
+      ${domainSummary}
+
+goals:
+${goals}
+`;
+
+  if (nonGoals) {
+    yaml += `\nnon_goals:\n${nonGoals}\n`;
+  }
+
+  yaml += `
+context:
+  features: []
+  todos: []
+  rationale: []
+
+domain_knowledge:
+  glossary: {}
+  background: []
+
+agents:
+  last_updated_by: {}
+  active_agents: []
+  logs: []
+
+memory:
+  summary_chunks: []
+
+runtime:
+  sync:
+    on_pull: merge
+    on_push: summarize
+  update_strategy: append-only
+  validation: []
+
+definitions: {}
+`;
+
+  // Show preview
+  const preview = document.getElementById('yamlPreview');
+  preview.textContent = yaml;
+  preview.style.display = 'block';
+
+  // Trigger download
+  const blob = new Blob([yaml], { type: 'text/yaml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'rtfm.ai.yml';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+
+</body>
+</html>
